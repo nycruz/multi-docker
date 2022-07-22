@@ -1,0 +1,25 @@
+language: generic 
+sudo: required
+
+services:
+  - docker
+
+before_install:
+  - docker build -t nycruz/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true nycruz/react-test npm test
+
+after_success:
+  - docker build -t nycruz/multi-client ./client
+  - docker build -t nycruz/multi-nginx ./nginx
+  - docker build -t nycruz/multi-server ./server
+  - docker build -t nycruz/multi-worker ./worker
+  # Login to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password=stdin
+  # Push to docker hub
+  - docker push nycruz/multi-client
+  - docker push nycruz/multi-nginx
+  - docker push nycruz/multi-server
+  - docker push nycruz/multi-worker
+  
